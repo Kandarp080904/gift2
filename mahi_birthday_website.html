@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Happy 21st Mahi 💕</title>
+  <style>
+    :root{
+      --pink1:#ffeaf2;
+      --pink2:#ffd7ea;
+      --accent:#ff6fa8;
+      --muted:#f9f5f8;
+      --glass: rgba(255,255,255,0.7);
+      --card-shadow: 0 12px 30px rgba(0,0,0,0.08);
+      --radius:18px;
+      --sans: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%; margin:0; font-family:var(--sans); background: linear-gradient(135deg,var(--pink1),var(--pink2));}
+    .wrap{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:36px}
+    .card{width:100%; max-width:1000px; background:linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.85)); border-radius:20px; box-shadow:var(--card-shadow); padding:28px; position:relative; overflow:hidden}
+
+    .bg-hearts{position:absolute; inset:0; pointer-events:none; z-index:0}
+    .heart{position:absolute; width:28px; height:28px; background:var(--accent); transform:rotate(-45deg); border-radius:6px; opacity:0.12}
+    .heart:before, .heart:after{content:''; position:absolute; width:28px; height:28px; background:var(--accent); border-radius:50%}
+    .heart:before{top:-14px; left:0}
+    .heart:after{left:14px; top:0}
+
+    .intro{position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; text-align:center; padding:28px}
+    .letter{max-width:760px; font-size:18px; color:#5a2d36; line-height:1.6}
+    .cta{margin-top:20px}
+    .btn{background:var(--accent); color:#fff; border:none; padding:12px 18px; border-radius:14px; font-weight:600; cursor:pointer}
+    .btn:active{transform:translateY(1px)}
+
+    .memory{display:none; z-index:2}
+    .title{color:#6b2140; text-align:center; margin-bottom:14px}
+    .carousel{position:relative; overflow:hidden; border-radius:14px; background:linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.9));}
+    .track{display:flex; transition:transform 520ms cubic-bezier(.2,.9,.25,1);}
+    .slide{min-width:100%; display:flex; gap:24px; align-items:center; padding:22px}
+    .photo{flex:0 0 56%; height:420px; border-radius:12px; background-size:cover; background-position:center; box-shadow:0 14px 30px rgba(0,0,0,0.10)}
+    .meta{flex:1}
+    .story{background:var(--glass); padding:18px; border-radius:12px; font-size:16px; color:#4b2b34}
+
+    .controls{display:flex; justify-content:space-between; align-items:center; padding:12px 6px}
+    .nav-btn{background:white; border-radius:10px; padding:10px 12px; border:none; box-shadow:0 8px 22px rgba(0,0,0,0.06); cursor:pointer}
+    .dots{display:flex; gap:8px}
+    .dot{width:10px; height:10px; border-radius:50%; background:rgba(0,0,0,0.12)}
+    .dot.active{background:var(--accent)}
+
+    .final{display:flex; flex-direction:column; align-items:center; justify-content:center; padding:38px}
+    .final h2{color:#5a2d36; margin:6px 0}
+    .final p{color:#5a2d36}
+
+    @media (max-width:880px){
+      .photo{height:340px}
+      .slide{flex-direction:column}
+      .photo{width:100%}
+      .meta{width:100%}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card" role="main">
+      <div class="bg-hearts" id="bgHearts"></div>
+      <section id="intro" class="intro">
+        <div id="letter" class="letter" aria-live="polite"></div>
+        <div class="cta">
+          <button id="beginBtn" class="btn" aria-label="Begin">Click to begin 💕</button>
+        </div>
+      </section>
+      <section id="memories" class="memory" aria-hidden="true">
+        <h3 class="title">Our Beautiful Moments</h3>
+        <div class="carousel">
+          <div class="track" id="track"></div>
+        </div>
+        <div class="controls">
+          <button id="prev" class="nav-btn" aria-label="Previous">← Prev</button>
+          <div class="dots" id="dots" role="tablist"></div>
+          <button id="next" class="nav-btn" aria-label="Next">Next →</button>
+        </div>
+      </section>
+      <audio id="bgAudio" loop preload="auto">
+        <source src="Perfect - 320Kbps-(Mr-Jat.in).mp3" type="audio/mpeg">
+      </audio>
+    </div>
+  </div>
+
+  <script>
+    const CONFIG = {
+      yourName: 'Kandarp',
+      herName: 'Mahi',
+      nicknames: ['Mahu','Mahudii','Betu','Diku','Bhodu'],
+      typingSpeed: 28,
+      images: ['assets/photo1.jpg','assets/photo2.jpg','assets/photo3.jpg','assets/photo4.jpg','assets/photo5.jpg','assets/photo6.jpg'],
+      stories: [
+        'Your smile that day made the whole city feel lighter. I still remember how we skipped that rainy bus stop and laughed till our bellies hurt.',
+        'Our little late-night walk — when you held my hand and said we’ll make it through. That hug saved me that week.',
+        <!-- 'The first time we tried cooking together and burnt half of it — but your laughter made it the best dinner ever.', -->
+        'That silly photo where we both made the same face — I keep it as my phone background, just saying.',
+        'Every tiny adventure with you turns into my favorite memory. This was the day we promised to try new things together.',
+        'Five years later — and every day with you feels like the first day. Thank you for being you.'
+      ],
+      finalMessage: `My lovely Mahu\nEvery year you shine brighter — and my love just grows deeper.\nHappy 21st Birthday, my forever girl 🌸🎂`
+    };
+
+    const letterEl = document.getElementById('letter');
+    const beginBtn = document.getElementById('beginBtn');
+    const intro = document.getElementById('intro');
+    const memories = document.getElementById('memories');
+    const bgAudio = document.getElementById('bgAudio');
+
+    const fullLetter = `My dearest ${CONFIG.herName} 💕\nFrom the first day we met, till this very moment, you’ve been the most beautiful part of my world.\nWe’ve laughed together, cried together, and even fought against the distance life threw at us — but we always found our way back to each other. Because no matter what, my heart always belongs to you.\nYou are my calm, my chaos, my home, and my forever.\nMaari mithudiii, mane khabar nathi ke a duniya ma shu saras che, but I know one thing — *tu chu*, and that’s enough for me.\nSometimes I still can’t believe I get to call you mine. My betu, my bhodu, my Mahudii — my everything.\nMe to tane bau aj prem kru chu ❤️\nAnd today, on your special day, I just want to remind you how deeply you’re loved — not just by the world, but by one pumpkin, completely and endlessly. 🎃💞\nNow, come with me on a little journey…\nLet’s relive our story together 💫`;
+
+    function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+    async function typeText(text, el, speed){
+      el.innerHTML = '';
+      for(let i=0;i<text.length;i++){
+        const ch = text[i];
+        el.innerHTML += ch === '\n' ? '<br>' : ch;
+        await sleep(speed);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', ()=>{
+      beginBtn.disabled = true;
+      beginBtn.style.opacity = 0.0;
+      typeText(fullLetter, letterEl, CONFIG.typingSpeed).then(()=>{ beginBtn.disabled = false; beginBtn.style.opacity = 1.0; });
+      spawnHearts();
+    });
+
+    beginBtn.addEventListener('click', async ()=>{
+      try{ bgAudio.volume = 0.12; await bgAudio.play(); }catch(e){}
+      intro.style.transition = 'opacity 420ms'; intro.style.opacity = 0; await sleep(420);
+      intro.style.display = 'none';
+      memories.style.display = 'block'; memories.setAttribute('aria-hidden','false'); memories.style.opacity = 0; await sleep(20);
+      memories.style.transition = 'opacity 420ms'; memories.style.opacity = 1;
+      initCarousel();
+    });
+
+    const track = document.getElementById('track');
+    const prevBtn = document.getElementById('prev');
+    const nextBtn = document.getElementById('next');
+    const dotsWrap = document.getElementById('dots');
+    let idx = 0;
+
+    function createSlides(){
+      track.innerHTML = '';
+      dotsWrap.innerHTML = '';
+      CONFIG.images.forEach((img,i)=>{
+        const slide = document.createElement('div'); slide.className='slide';
+        const photo = document.createElement('div'); photo.className='photo'; photo.style.backgroundImage = `url('${img}')`;
+        const meta = document.createElement('div'); meta.className='meta';
+        const story = document.createElement('div'); story.className='story';
+        story.innerHTML = `<strong>Memory ${i+1}</strong><p style='margin-top:8px;'>${CONFIG.stories[i] || ''}</p>`;
+        meta.appendChild(story); slide.appendChild(photo); slide.appendChild(meta); track.appendChild(slide);
+        const d = document.createElement('div'); d.className='dot'; d.dataset.index=i; d.addEventListener('click', ()=> goTo(i)); dotsWrap.appendChild(d);
+      });
+      const final = document.createElement('div'); final.className='slide';
+      const wrapper = document.createElement('div'); wrapper.style.width='100%'; wrapper.style.display='flex'; wrapper.style.justifyContent='center'; wrapper.style.alignItems='center';
+      const finalCard = document.createElement('div'); finalCard.className='final';
+      const h2 = document.createElement('h2'); h2.textContent='My lovely '+CONFIG.herName+' 💕';
+      const p = document.createElement('p'); p.innerHTML=CONFIG.finalMessage.replace(/\n/g,'<br>');
+      const replay = document.createElement('button'); replay.className='btn'; replay.textContent='Replay 💗'; replay.style.marginTop='14px'; replay.addEventListener('click', ()=> goTo(0));
+      finalCard.appendChild(h2); finalCard.appendChild(p); finalCard.appendChild(replay);
+      wrapper.appendChild(finalCard); final.appendChild(wrapper); track.appendChild(final);
+      updateDots();
+    }
+
+    function updateDots(){
+      Array.from(dotsWrap.children).forEach(d=>d.classList.toggle('active', Number(d.dataset.index)===idx));
+    }
+
+    function goTo(i){
+      const slidesCount = track.children.length;
+      idx=Math.max(0,Math.min(i,slidesCount-1));
+      track.style.transform=`translateX(-${idx*100}%)`;
+      updateDots();
+      if(idx===track.children.length-1) celebratory();
+    }
+
+    function initCarousel(){
+      createSlides(); goTo(0);
+      prevBtn.addEventListener('click', ()=> goTo(idx-1));
+      nextBtn.addEventListener('click', ()=> goTo(idx+1));
+      document.addEventListener('keydown',(e)=>{
+        if(memories.style.display==='block'){
+          if(e.key==='ArrowLeft') goTo(idx-1);
+          if(e.key==='ArrowRight') goTo(idx+1);
+        }
+      });
+    }
+
+    function celebratory(){
+      for(let i=0;i<12;i++){
+        const el=document.createElement('div'); el.className='heart';
+        el.style.left=`${50+(Math.random()*40-20)}%`; el.style.top=`${50+(Math.random()*20-10)}%`;
+        el.style.opacity=0.18+Math.random()*0.25; el.style.width=`${14+Math.random()*28}px`; el.style.height=el.style.width;
+        document.getElementById('bgHearts').appendChild(el);
+        setTimeout(()=>{ el.style.transition=`transform ${2+Math.random()*2}s ease, top ${2+Math.random()*2}s ease, left ${2+Math.random()*2}s ease, opacity 1.6s`; el.style.top=`${-10+Math.random()*120}%`; el.style.left=`${Math.random()*100}%`; el.style.opacity=0; },40);
+        setTimeout(()=>el.remove(),4200+Math.random()*2400);
+      }
+    }
+
+    function spawnHearts(){
+      const container=document.getElementById('bgHearts');
+      function make(){
+        const h=document.createElement('div'); h.className='heart';
+        const size=10+Math.random()*36; h.style.width=`${size}px`; h.style.height=`${size}px`;
+        h.style.left=`${Math.random()*100}%`; h.style.top=`${100+Math.random()*10}%`;
+        container.appendChild(h);
+        setTimeout(()=>{ h.style.transition=`transform ${8+Math.random()*8}s linear, top ${8+Math.random()*8}s linear, left ${8+Math.random()*8}s linear, opacity 5s`; h.style.top=`${-10-Math.random()*10}%`; h.style.left=`${Math.random()*100}%`; h.style.opacity=0; },60);
+        setTimeout(()=>h.remove(),13000+Math.random()*10000);
+        setTimeout(make,400+Math.random()*1200);
+      }
+      for(let i=0;i<6;i++) setTimeout(make,i*300);
+    }
+  </script>
+</body>
+</html>
